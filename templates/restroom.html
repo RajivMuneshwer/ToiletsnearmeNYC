@@ -1,0 +1,65 @@
+
+<html>
+  <style>
+    body{ 
+      font-size: 15pt;
+      font-family: arial;
+    }
+    p {
+       margin-left: 40px;
+       font-size: 15px;
+    }
+
+    a.button {
+    -webkit-appearance: button;
+    -moz-appearance: button;
+    appearance: button;
+    border-radius: 25px;
+    font-size: 20px;
+    margin-left: 40px;
+    border: 2px solid black;
+    padding: 5px; 
+    text-decoration: none;
+    color: initial;
+}
+  </style>
+
+
+<body>
+  <h1>{{loc['name']}}</h1>
+  <div>{{loc['address']}}, {{loc['open']}} to {{loc['close']}}</div>
+
+  <h2>Tips
+  <a href={{url_for('create_tips', rid = rid )}} class="button"> Write Tip</a>
+  </h2>
+
+  <div>
+      {% for i in range(0,len_tips)%}
+      <div> {{tips['names_tips'][i]}}</div>
+      {% if tips['labels_tips'][i] != None%}
+      <div> <font size = 1px> {{tips['labels_tips'][i]}} </font></div> 
+      {% endif%}
+      <div>  <p> {{tips['desc_tips'][i]}} </p> </div>
+      {% endfor %}
+  </div>
+
+  <h2>Review</h2>
+
+  <div>
+      {% for i in range(0, len_review)%}
+      <div> {{review['names_review'][i]}}</div>
+      <div> <font size = 3px> Rating: </font> {{review['stars_review'][i]}}</div>
+      <div> <p>{{review['review_review'][i]}} </p></div>
+      {% if review['photos_review'][i] != 'None'%}
+      <div> <img src="{{url_for('static', filename='images/'+review['photos_review'][i])}}" width="400" height="240" ></div>
+      {% endif %}
+      {% endfor %}
+
+
+
+  </div>
+
+</body>
+
+
+</html>

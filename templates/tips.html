@@ -1,0 +1,32 @@
+<html>
+
+<body>
+    <form method = "POST" action="{{url_for('add_tips', rid = rid)}}">
+
+        <label for="label_box">Label:</label><br>
+
+        <input type="text" id="label_box" name = "label_box"><br>
+
+        <label for="tips_desc"> Tip (50 char limit): </label><br>
+
+        <textarea rows="5" cols="80" id="tips_desc" maxlength="60" name="tips_desc"></textarea><br>
+
+        <br>
+
+        <input type="submit" value="Post">
+
+        <div>{{rid}}</div>
+        
+
+
+
+    </form>
+
+
+</body>
+
+
+
+
+
+</html>

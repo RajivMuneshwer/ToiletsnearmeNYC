@@ -95,114 +95,159 @@ def teardown_request(exception):
 # see for routing: http://flask.pocoo.org/docs/0.10/quickstart/#routing
 # see for decorators: http://simeonfranklin.com/blog/2012/jul/1/python-decorators-in-12-steps/
 #
-@app.route('/')
-def index():
-  """
-  request is a special object that Flask provides to access web request information:
-  request.method:   "GET" or "POST"
-  request.form:     if the browser submitted a form, this contains the data in the form
-  request.args:     dictionary of URL arguments e.g., {a:1, b:2} for http://localhost?a=1&b=2
-  See its API: http://flask.pocoo.org/docs/0.10/api/#incoming-request-data
-  """
-
-  # DEBUG: this is debugging code to see what request looks like
-  print (request.args)
-
-
-  #
-  # example of a database query
-  #
-  cursor = g.conn.execute("SELECT name FROM U")
-  names = []
-  for result in cursor:
-    names.append(result['name'])  # can also be accessed using result[0]
-  cursor.close()
-
-  #
-  # Flask uses Jinja templates, which is an extension to HTML where you can
-  # pass data to a template and dynamically generate HTML based on the data
-  # (you can think of it as simple PHP)
-  # documentation: https://realpython.com/blog/python/primer-on-jinja-templating/
-  #
-  # You can see an example template in templates/index.html
-  #
-  # context are the variables that are passed to the template.
-  # for example, "data" key in the context variable defined below will be 
-  # accessible as a variable in index.html:
-  #
-  #     # will print: [u'grace hopper', u'alan turing', u'ada lovelace']
-  #     <div>{{data}}</div>
-  #     
-  #     # creates a <div> tag for each element in data
-  #     # will print: 
-  #     #
-  #     #   <div>grace hopper</div>
-  #     #   <div>alan turing</div>
-  #     #   <div>ada lovelace</div>
-  #     #
-  #     {% for n in data %}
-  #     <div>{{n}}</div>
-  #     {% endfor %}
-  #
-  context = dict(data = names)
-
-
-  #
-  # render_template looks in the templates/ folder for files.
-  # for example, the below file reads template/index.html
-  #
-  return render_template("index.html", **context)
-
-#
-# This is an example of a different path.  You can see it at
-# 
-#     localhost:8111/another
-#
-# notice that the functio name is another() rather than index()
-# the functions for each app.route needs to have different names
-#
-@app.route('/another')
-def another():
-  return render_template("anotherfile.html")
 
 
 # Example of adding new data to the database
 @app.route('/add', methods=['POST'])
 def add():
+
   name = request.form['name']
-  print (name)
+
   cmd = 'INSERT INTO test(name) VALUES (:name1), (:name2)';
+
   g.conn.execute(text(cmd), name1 = name, name2 = name);
+  
   return redirect('/')
 
 
-@app.route('/home')
+@app.route('/')
 def home():
+
   if not session.get('logged_in'):
+
     return render_template('login.html')
+
   else:
+
     return "Hello Boss!"
 
 
 
 @app.route('/login', methods = ['POST'])
 def login():
+
   password_prime = request.form['password']
+
   username_prime = request.form['username']
 
   cmd = 'SELECT uid FROM U WHERE name = (:n1)';
 
   cursor = g.conn.execute(text(cmd), n1 = username_prime);
+
   password = []
+
   for result in cursor:
+
     password.append(result['uid'])  # can also be accessed using result[0]
+
   cursor.close()
 
   if password_prime == str(password[0]) :
-    session['logged_in'] = True 
+
+    session['logged_in'] = True
+
+    session['uid'] = password_prime
+
   else:
     flash('wrong password!')
-  return redirect('/home')
+
+  return redirect('/')
+
+
+
+@app.route('/restroom/<rid>/create_tips')
+def create_tips(rid, methods = ['GET','POST']):
+
+  return render_template("tips.html", rid =rid)
+
+
+
+@app.route('/add_tips/<rid>',  methods=['POST'])
+def add_tips(rid):
+
+  label = request.form['label_box']
+
+  desc = request.form['tips_desc'] 
+
+  uid = session['uid']
+
+  cmd = 'INSERT INTO Tips VALUES (:u, :r, DEFAULT, :l, :d)';
+
+  g.conn.execute(text(cmd), u = uid, r = rid, l = label, d = desc);
+
+  return redirect('/restroom/'+rid)
+
+
+
+
+
+
+@app.route('/restroom/<rid>')
+def restroom(rid):
+
+  cmd = 'SELECT U.name, T.label, T.description FROM Tips as T JOIN U ON T.uid = U.uid WHERE T.rid = (:r1)';
+
+  cursor = g.conn.execute(text(cmd), r1 = rid);
+
+  tips_dic = {'names_tips':[], 'labels_tips':[],'desc_tips':[]}
+
+  for result in cursor:
+
+    tips_dic['names_tips'].append(result['name'])
+
+    if result['label'] != 'None':
+      tips_dic['labels_tips'].append(result['label'])
+    else:
+      tips_dic['labels_tips'].append(None)
+
+    tips_dic['desc_tips'].append(result['description'])
+
+  cursor.close()
+
+  cmd = 'SELECT U.name, R.review, R.stars, R.photos FROM Review as R JOIN U ON R.uid = U.uid WHERE R.rid = (:r2)';
+
+  cursor = g.conn.execute(text(cmd), r2 = rid);
+
+  review_dic = {'names_review':[],'review_review' : [], 'stars_review' : [], 'photos_review' : []}
+
+  star_jpg = ['*', '**', '***', '****', '*****']
+
+
+
+  for result in cursor:
+
+    review_dic['names_review'].append(result['name'])
+
+    review_dic['review_review'].append(result['review'])
+
+    review_dic['stars_review'].append(star_jpg[int(result['stars']) - 1 ])
+
+    review_dic['photos_review'].append(str(result['photos']))
+
+  
+  cmd = 'SELECT P.name, P.address, R.open, R.close FROM Restroom as R JOIN Places as P ON R.pid = P.pid WHERE R.rid = (:r3)'
+
+  cursor = g.conn.execute(text(cmd), r3 = rid)
+
+  location = {'name':null, 'address':null, 'open':null, 'close':null}
+
+  for result in cursor:
+
+    location['name'] = result['name']
+
+    location['address'] = result['address']
+
+    location['open'] = result['open']
+
+    location['close'] = result['close']
+
+  print(tips_dic)
+
+  return render_template("restroom.html", loc = location, tips = tips_dic, len_tips = len(tips_dic['names_tips']),
+  review = review_dic, len_review = len(review_dic['names_review']), rid = rid)
+
+
+
 
 
 if __name__ == "__main__":
