@@ -2,6 +2,8 @@ import os
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
 from flask import Flask, request, render_template, g, redirect, Response,flash, session, abort
+from datetime import date, datetime
+from werkzeug.utils import secure_filename
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
@@ -32,25 +34,35 @@ def teardown_request(exception):
 
 @app.route('/user/<uid>')
 def user(uid):
+
   query="SELECT * FROM U WHERE U.uid=:u1"
+
   cursor = g.conn.execute(text(query), u1 = uid)
-  username=""
-  is_verified=0
-  non_verified=0
-  startdate=""
-  email=""
+
   for results in cursor:
+
     username=results['name']
+
     is_verified=results['verified']
+
     non_verified=results['non_verified']
+
     startdate=results['start_date']
+
     email=results['email_address']
+
   cursor.close()
+
   v="Non-Verified User"
+
   if is_verified==1:
+
     v="Verified User"
-  if(username==""):
+
+  if( username == None ):
+
     return render_template("user.html",verified="User doesn't exist",date="Never")
+
   return render_template("user.html",Username=username,verified=v,date=startdate,email_address=email)
 
 # Example of adding new data to the database
@@ -86,15 +98,19 @@ def login():
 
   username_prime = request.form['username']
 
-  cmd = 'SELECT uid FROM U WHERE name = (:n1)';
+  cmd = 'SELECT uid, password  FROM U WHERE name = (:n1)';
 
   cursor = g.conn.execute(text(cmd), n1 = username_prime);
 
   password = []
 
+  uid = []
+
   for result in cursor:
 
-    password.append(result['uid'])  # can also be accessed using result[0]
+    uid.append(result['uid'])  # can also be accessed using result[0]
+
+    password.append(result['password'])
 
   cursor.close()
 
@@ -102,7 +118,7 @@ def login():
 
     session['logged_in'] = True
 
-    session['uid'] = password_prime
+    session['uid'] = uid[0]
 
   else:
     flash('wrong password!')
@@ -116,6 +132,9 @@ def create_tips(rid, methods = ['GET','POST']):
 
   return render_template("tips.html", rid =rid)
 
+@app.route('/restroom/<rid>/create_review')
+def create_review(rid, methods = ['GET', 'POST']):
+  return render_template("review.html", rid =rid)
 
 
 @app.route('/add_tips/<rid>',  methods=['POST'])
@@ -132,6 +151,42 @@ def add_tips(rid):
   g.conn.execute(text(cmd), u = uid, r = rid, l = label, d = desc);
 
   return redirect('/restroom/'+rid)
+
+@app.route('/add_review/<rid>', methods=  ['POST'])
+def add_review(rid):
+
+  stars = request.form['rating']
+
+  desc = request.form['review_desc']
+
+  uid = session['uid']
+
+  x = datetime.now()
+
+  time = x.strftime("%x")
+
+  uploaded_file = request.files['file']
+
+  print(uploaded_file)
+  
+  if uploaded_file.filename != '':
+
+        filename = secure_filename(uploaded_file.filename)
+        
+        uploaded_file.save(os.path.join('static/images', filename))
+        
+        cmd = 'INSERT INTO  Review VALUES (:r, :u, :d, :s, :p, :t)';
+        
+        g.conn.execute(text(cmd), u = uid, r = rid, d = desc, s = stars, t = time, p = filename);
+  else:
+    
+    cmd = 'INSERT INTO  Review VALUES (:r, :u, :d, :s, NULL, :t)';
+    
+    g.conn.execute(text(cmd), u = uid, r = rid, d = desc, s = stars, t = time);
+  return redirect('/restroom/'+rid )
+
+
+
 
 
 

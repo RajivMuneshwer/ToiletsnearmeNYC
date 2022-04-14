@@ -37,18 +37,20 @@
       {% for i in range(0,len_tips)%}
       <div> {{tips['names_tips'][i]}}</div>
       {% if tips['labels_tips'][i] != None%}
-      <div> <font size = 1px> {{tips['labels_tips'][i]}} </font></div> 
+      <div> <strong><font size = 2px font-weight> {{tips['labels_tips'][i]}} </font></strong></div> 
       {% endif%}
       <div>  <p> {{tips['desc_tips'][i]}} </p> </div>
       {% endfor %}
   </div>
 
-  <h2>Review</h2>
+  <h2>Review
+    <a href={{url_for('create_review', rid = rid )}} class="button"> Write Review</a>
+  </h2>
 
   <div>
       {% for i in range(0, len_review)%}
       <div> {{review['names_review'][i]}}</div>
-      <div> <font size = 3px> Rating: </font> {{review['stars_review'][i]}}</div>
+      <div> <font size = 3px> <strong> Rating: </strong> </font> {{review['stars_review'][i]}}</div>
       <div> <p>{{review['review_review'][i]}} </p></div>
       {% if review['photos_review'][i] != 'None'%}
       <div> <img src="{{url_for('static', filename='images/'+review['photos_review'][i])}}" width="400" height="240" ></div>

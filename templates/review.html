@@ -1,0 +1,41 @@
+<html>
+
+<body>
+    <form method = "POST" action="{{url_for('add_review', rid = rid)}}" enctype="multipart/form-data">
+        <div>Stars</div>
+        <input type="radio" id = "one_star" name = "rating" value = 1>
+        <label for="one_star">1</label>
+        <input type="radio" id = "two_star" name = "rating" value = 2>
+        <label for="two_star">2</label>
+        <input type="radio" id = "three_star" name = "rating" value = 3>
+        <label for="three_star">3</label>
+        <input type="radio" id = "four_star" name = "rating" value = 4>
+        <label for="four_star">4</label>
+        <input type="radio" id = "five_star" name = "rating" value = 5>
+        <label for="five_star">5</label>
+        <br>
+
+        <label for="review_desc">Review: </label><br>
+
+        <textarea rows="5" cols="80" id="review_desc" name="review_desc"></textarea><br>
+
+        <br>
+
+        <label for="file">Select image:</label>
+        <input type="file" id="file" name="file" accept="image/*">
+        <br>
+
+        <input type="submit" value="Post">
+
+        
+
+    </form>
+
+
+</body>
+
+
+
+
+
+</html>
