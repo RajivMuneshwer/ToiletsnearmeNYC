@@ -31,6 +31,30 @@ def teardown_request(exception):
   except Exception as e:
     pass
 
+@app.route('/home')
+def home1():
+  query = "SELECT Places.name, Restroom.rid, Restroom.is_non_binary, Restroom.is_accessible_to_all, Restroom.no_rooms, Restroom.no_units, Restroom.open, Restroom.close FROM Restroom JOIN Places ON Restroom.pid = Places.pid"
+  cursor = g.conn.execute(query)
+  #results = cursor.fetchall()
+  restrooms = {'location':[], 'number': [], 'non_binary':[], 'accessible': [], 'no_rooms': [], 'no_units': [], 'open': [], 'close':[]  }
+  for row in cursor:
+    restrooms['location'].append(row['name'])
+    restrooms['number'].append(row['rid'])
+    if row['is_non_binary'] == 1:
+      restrooms['non_binary'].append("Yes")
+    elif row['is_non_binary'] == 0:
+      restrooms['non_binary'].append("No")
+    if row['is_accessible_to_all'] == 1:
+      restrooms['accessible'].append("Yes")
+    elif row['is_accessible_to_all'] == 0:
+      restrooms['accessible'].append("No")
+    restrooms['no_rooms'].append(row['no_rooms'])
+    restrooms['no_units'].append(row['no_units'])
+    restrooms['open'].append(row['open'])
+    restrooms['close'].append(row['close'])
+  cursor.close()
+  return render_template("home.html", restrooms = restrooms, num_rr= len(restrooms['location']))
+
 @app.route('/user/<uid>')
 def user(uid):
   query="SELECT * FROM U WHERE U.uid={}".format(uid)
@@ -95,7 +119,6 @@ def add():
 
   return redirect('/')
 
-
 @app.route('/')
 def home():
 
@@ -105,8 +128,7 @@ def home():
 
   else:
 
-    return "Hello Boss!"
-
+    return "Something Wrong!"
 
 
 @app.route('/login', methods = ['POST'])
@@ -126,7 +148,7 @@ def login():
 
   for result in cursor:
 
-    uid.append(result['uid'])  # can also be accessed using result[0]
+    uid.append(result['uid'])  
 
     password.append(result['password'])
 
@@ -142,7 +164,6 @@ def login():
     flash('wrong password!')
 
   return redirect('/')
-
 
 
 @app.route('/restroom/<rid>/create_tips')
@@ -214,14 +235,16 @@ def add_review(rid):
 @app.route('/restroom/<rid>')
 def restroom(rid):
 
-  cmd = 'SELECT U.name, T.label, T.description FROM Tips as T JOIN U ON T.uid = U.uid WHERE T.rid = (:r1)';
+  cmd = 'SELECT U.uid,U.name, T.label, T.description FROM Tips as T JOIN U ON T.uid = U.uid WHERE T.rid = (:r1)';
 
   cursor = g.conn.execute(text(cmd), r1 = rid);
 
-  tips_dic = {'names_tips':[], 'labels_tips':[],'desc_tips':[]}
+  tips_dic = {'names_tips':[], 'labels_tips':[],'desc_tips':[],'uid':[]}
 
   for result in cursor:
 
+    tips_dic['uid'].append(result['uid'])
+    
     tips_dic['names_tips'].append(result['name'])
 
     if result['label'] != 'None':
@@ -233,11 +256,11 @@ def restroom(rid):
 
   cursor.close()
 
-  cmd = 'SELECT U.name, R.review, R.stars, R.photos FROM Review as R JOIN U ON R.uid = U.uid WHERE R.rid = (:r2)';
+  cmd = 'SELECT U.uid, U.name, R.review, R.stars, R.photos FROM Review as R JOIN U ON R.uid = U.uid WHERE R.rid = (:r2)';
 
   cursor = g.conn.execute(text(cmd), r2 = rid);
 
-  review_dic = {'names_review':[],'review_review' : [], 'stars_review' : [], 'photos_review' : []}
+  review_dic = {'names_review':[],'review_review' : [], 'stars_review' : [], 'photos_review' : [],'name_uid':[]}
 
   star_jpg = ['*', '**', '***', '****', '*****']
 
@@ -252,7 +275,8 @@ def restroom(rid):
     review_dic['stars_review'].append(star_jpg[int(result['stars']) - 1 ])
 
     review_dic['photos_review'].append(str(result['photos']))
-
+    
+    review_dic['name_uid'].append(result['uid'])
   
   cmd = 'SELECT P.name, P.address, R.open, R.close FROM Restroom as R JOIN Places as P ON R.pid = P.pid WHERE R.rid = (:r3)'
 

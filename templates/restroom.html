@@ -35,7 +35,7 @@
 
   <div>
       {% for i in range(0,len_tips)%}
-      <div> {{tips['names_tips'][i]}}</div>
+      <div> <a href="/user/{{tips['uid'][i]}}">{{tips['names_tips'][i]}}</a></div>
       {% if tips['labels_tips'][i] != None%}
       <div> <strong><font size = 2px font-weight> {{tips['labels_tips'][i]}} </font></strong></div> 
       {% endif%}
@@ -49,7 +49,7 @@
 
   <div>
       {% for i in range(0, len_review)%}
-      <div> {{review['names_review'][i]}}</div>
+      <div> <a href="/user/{{review['name_uid'][i]}}">{{review['names_review'][i]}}</a></div>
       <div> <font size = 3px> <strong> Rating: </strong> </font> {{review['stars_review'][i]}}</div>
       <div> <p>{{review['review_review'][i]}} </p></div>
       {% if review['photos_review'][i] != 'None'%}
