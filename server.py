@@ -20,7 +20,7 @@ def before_request():
   except:
     print ("uh oh, problem connecting to database")
     import traceback; traceback.print_exc()
-    g.conn = None
+    raise
 
 @app.teardown_request
 def teardown_request(exception):
@@ -29,11 +29,10 @@ def teardown_request(exception):
   except Exception as e:
     pass
 
-
 @app.route('/user/<uid>')
 def user(uid):
-  query="SELECT * FROM U WHERE U.uid=:u1"
-  cursor = g.conn.execute(text(query), u1 = uid)
+  query="SELECT * FROM U WHERE U.uid={}".format(uid)
+  cursor = g.conn.execute(query)
   username=""
   is_verified=0
   non_verified=0
@@ -51,7 +50,25 @@ def user(uid):
     v="Verified User"
   if(username==""):
     return render_template("user.html",verified="User doesn't exist",date="Never")
-  return render_template("user.html",Username=username,verified=v,date=startdate,email_address=email)
+  query="SELECT * FROM Visit WHERE Visit.uid={} ORDER BY time".format(uid)
+  cursor=g.conn.execute(query)
+  visits=[]
+  for result in cursor:
+    visits.append(result)
+  cursor.close()
+  query="SELECT * FROM Tips WHERE Tips.uid={}".format(uid)
+  cursor=g.conn.execute(query)
+  tips=[]
+  for result in cursor:
+    tips.append(result)
+  cursor.close()
+  query="SELECT * FROM Review WHERE Review.uid={} ORDER BY time".format(uid)
+  cursor=g.conn.execute(query)
+  reviews=[]
+  for result in cursor:
+    reviews.append(result)
+  cursor.close()
+  return render_template("user.html",Username=username,verified=v,date=startdate,email_address=email,visitsrecord=visits,tiprecord=tips,reviewrecord=reviews)
 
 # Example of adding new data to the database
 @app.route('/add', methods=['POST'])

@@ -14,11 +14,24 @@
   <div>{{verified}}</div>
   <div>start date: {{date}}</div>
 
-<p><a href="/another">My Visits</a></p>
-<p><a href="/another">My Tips</a></p>
-<p><a href="/another">My Reviews</a></p>
-
+<h3>My Visits</h3>
+{% for visit in visitsrecord %}
+    <p>{{visit['time']}}:<a href="/restroom/{{visit['rid']}}">restroom NO.{{visit['rid']}}</a></p>
+{% endfor %}
+<h3>My Tips</h3>
+{% for tip in tiprecord %}
+    <p><a href="/restroom/{{tip['rid']}}">restroom NO.{{tip['rid']}}</a></p>
+    <p>{{tip['label']}}</p>
+    <p>{{tip['description']}}</p>
+{% endfor %}
+<h3>My Reviews</h3>
+{% for review in reviewrecord %}
+    <p><a href="/restroom/{{review['rid']}}">restroom NO.{{review['rid']}}</a>:{{review['stars']}} Star</p>
+    <p>{{review['time']}}:{{review['review']}}</p>
+    {% if review['photos'] is not none %}
+    <div> <img src="{{url_for('static', filename='images/'+review['photos'])}}" width="400" height="240" ></div>
+    {% endif %} 
+{% endfor %}
 </body>
-
 
 </html>
