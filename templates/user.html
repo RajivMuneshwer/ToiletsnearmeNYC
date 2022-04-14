@@ -4,6 +4,19 @@
       font-size: 15pt;
       font-family: Arial;
     }
+
+    a.button {
+    -webkit-appearance: button;
+    -moz-appearance: button;
+    appearance: button;
+    border-radius: 25px;
+    font-size: 20px;
+    margin-left: 40px;
+    border: 2px solid black;
+    padding: 5px; 
+    text-decoration: none;
+    color: initial;
+}
   </style>
 
 
@@ -14,9 +27,9 @@
   <div>{{verified}}</div>
   <div>start date: {{date}}</div>
 
-<p><a href="/another">My Visits</a></p>
-<p><a href="/another">My Tips</a></p>
-<p><a href="/another">My Reviews</a></p>
+<p><a href="{{url_for( 'user_visits' , uid = uid )}}" class = "button">My Visits</a></p>
+<p><a href="{{url_for('user_tips', uid = uid )}}" class = "button">My Tips</a></p>
+<p><a href="{{url_for('user_reviews', uid = uid )}}" class = "button">My Reviews</a></p>
 
 </body>
 

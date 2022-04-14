@@ -1,4 +1,5 @@
 import os
+from unittest import result
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
 from flask import Flask, request, render_template, g, redirect, Response,flash, session, abort
@@ -63,19 +64,93 @@ def user(uid):
 
     return render_template("user.html",verified="User doesn't exist",date="Never")
 
-  return render_template("user.html",Username=username,verified=v,date=startdate,email_address=email)
+  return render_template("user.html",Username=username,verified=v,date=startdate,email_address=email, uid = uid)
 
-# Example of adding new data to the database
-@app.route('/add', methods=['POST'])
-def add():
+@app.route('/user_visits/<uid>')
+def user_visits(uid):
 
-  name = request.form['name']
+  cmd = 'SELECT u.name, p.name as place, r.rid, v.time FROM Visit as v JOIN Restroom as r ON v.rid = r.rid JOIN Places as p ON p.pid = r.pid JOIN U as u ON u.uid = v.uid WHERE v.uid  = :u'
 
-  cmd = 'INSERT INTO test(name) VALUES (:name1), (:name2)';
+  cursor = g.conn.execute(text(cmd), u = uid)
 
-  g.conn.execute(text(cmd), name1 = name, name2 = name);
+  user_dic = {'rid':[], 'name':[], 'time':[] }
 
-  return redirect('/')
+  for results in cursor:
+
+    user_dic['rid'].append(results['rid'])
+
+    user_dic['name'].append(results['place'])
+
+    user_dic['time'].append(results['time'])
+
+    username = results['name']
+  
+  
+  
+  cursor.close()
+
+  return render_template("user_visits.html", uid = uid, username = username, visits = user_dic, len_visits = len(user_dic['rid']))
+
+@app.route('/user_tips/<uid>')
+def user_tips(uid):
+
+  cmd = 'SELECT u.name, p.name as place, t.label, t.description, t.rid FROM Tips as t JOIN U as u ON t.uid = u.uid JOIN Restroom as r ON r.rid = t.rid JOIN Places as p ON p.pid = r.pid WHERE t.uid = :u'
+
+  cursor = g.conn.execute(text(cmd), u = uid)
+
+  user_dic = {'rid':[], 'place':[], 'label':[], 'desc' :[]}
+
+  for results in cursor:
+
+    user_dic['rid'].append(results['rid'])
+
+    user_dic['place'].append(results['place'])
+
+    user_dic['label'].append(results['label'])
+
+    user_dic['desc'].append(results['description'])
+
+    username = results['name']
+  
+  cursor.close()
+
+
+  return render_template("user_tips.html", uid = uid, username = username, tips = user_dic, len_tips = len(user_dic['rid']))
+  
+
+@app.route('/user_reviews/<uid>')
+def user_reviews(uid):
+  
+  cmd = 'SELECT u.name, p.name as place, w.review, w.stars, w.photos, w.time, r.rid FROM Review as w JOIN Restroom as r ON r.rid = w.rid JOIN Places as p ON p.pid = r.pid JOIN U as u ON u.uid = w.uid WHERE w.uid = :u'
+
+  cursor = g.conn.execute(text(cmd), u = uid)
+
+  user_dic = {'rid':[], 'place':[], 'stars':[], 'review':[], 'photos':[], 'time':[] }
+
+  star_jpg = ['*', '**', '***', '****', '*****']
+
+  for results in cursor:
+
+    user_dic['rid'].append(results['rid'])
+
+    user_dic['place'].append(results['place'])
+
+    user_dic['review'].append(results['review'])
+
+    user_dic['stars'].append(star_jpg[int(results['stars']) - 1 ])
+
+    user_dic['photos'].append(results['photos'])
+
+    user_dic['time'].append(results['time'])
+
+    username = results['name']
+  
+  cursor.close()
+
+  return render_template("user_reviews.html", uid = uid, reviews = user_dic, username = username, len_reviews = len(user_dic['rid']) )
+
+
+
 
 
 @app.route('/')
@@ -196,11 +271,11 @@ def add_review(rid):
 @app.route('/restroom/<rid>')
 def restroom(rid):
 
-  cmd = 'SELECT U.name, T.label, T.description FROM Tips as T JOIN U ON T.uid = U.uid WHERE T.rid = (:r1)';
+  cmd = 'SELECT U.uid, U.name, T.label, T.description FROM Tips as T JOIN U ON T.uid = U.uid WHERE T.rid = (:r1)';
 
   cursor = g.conn.execute(text(cmd), r1 = rid);
 
-  tips_dic = {'names_tips':[], 'labels_tips':[],'desc_tips':[]}
+  tips_dic = {'names_tips':[], 'labels_tips':[],'desc_tips':[], 'uid_tips':[]}
 
   for result in cursor:
 
@@ -213,13 +288,15 @@ def restroom(rid):
 
     tips_dic['desc_tips'].append(result['description'])
 
+    tips_dic['uid_tips'].append(result['uid'])
+
   cursor.close()
 
-  cmd = 'SELECT U.name, R.review, R.stars, R.photos FROM Review as R JOIN U ON R.uid = U.uid WHERE R.rid = (:r2)';
+  cmd = 'SELECT U.uid, U.name, R.review, R.stars, R.photos FROM Review as R JOIN U ON R.uid = U.uid WHERE R.rid = (:r2)';
 
   cursor = g.conn.execute(text(cmd), r2 = rid);
 
-  review_dic = {'names_review':[],'review_review' : [], 'stars_review' : [], 'photos_review' : []}
+  review_dic = {'names_review':[],'review_review' : [], 'stars_review' : [], 'photos_review' : [], 'uid_review':[]}
 
   star_jpg = ['*', '**', '***', '****', '*****']
 
@@ -234,6 +311,8 @@ def restroom(rid):
     review_dic['stars_review'].append(star_jpg[int(result['stars']) - 1 ])
 
     review_dic['photos_review'].append(str(result['photos']))
+
+    review_dic['uid_review'].append(str(result['uid']))
 
   
   cmd = 'SELECT P.name, P.address, R.open, R.close FROM Restroom as R JOIN Places as P ON R.pid = P.pid WHERE R.rid = (:r3)'

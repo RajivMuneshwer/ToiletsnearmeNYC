@@ -1,0 +1,60 @@
+<html>
+  <style>
+    body{ 
+      font-size: 15pt;
+      font-family: arial;
+    }
+    p {
+       margin-left: 40px;
+       font-size: 15px;
+    }
+    a{
+    text-decoration: none;
+    color: black;
+    }
+
+    a.button {
+    -webkit-appearance: button;
+    -moz-appearance: button;
+    appearance: button;
+    border-radius: 25px;
+    font-size: 20px;
+    margin-left: 40px;
+    border: 2px solid black;
+    padding: 5px; 
+    text-decoration: none;
+    color: initial;
+}
+  </style>
+
+  <body>
+
+    <h1><a href="{{url_for('user' , uid = uid)}}"> {{username}}</a></h1><br>
+
+    <h2>Tips</h2>
+
+    <div>
+
+        {% for i in range(0,len_tips)%}
+
+        <div> <a href="{{url_for( 'restroom' , rid = tips['rid'][i] )}}"> {{tips['place'][i]}} </a> </div>
+
+        {% if tips['label'][i] != None%}
+
+        <div> <strong><font size = 2px font-weight> {{tips['label'][i]}} </font></strong></div> 
+
+        {% endif%}
+
+        <div>  <p> {{tips['desc'][i]}} </p> </div>
+
+        {% endfor %}
+
+
+    </div>
+
+
+
+
+  </body>
+
+</html>
