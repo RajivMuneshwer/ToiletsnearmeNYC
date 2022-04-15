@@ -34,7 +34,7 @@ def teardown_request(exception):
 
 @app.route('/home')
 def home1():
-  query = "SELECT Places.name, Restroom.rid, Restroom.is_non_binary, Restroom.is_accessible_to_all, Restroom.no_rooms, Restroom.no_units, Restroom.open, Restroom.close FROM Restroom JOIN Places ON Restroom.pid = Places.pid"
+  query = "SELECT Places.name, Restroom.rid, Restroom.is_non_binary, Restroom.is_accessible_to_all, Restroom.no_rooms, Restroom.no_units, Restroom.open, Restroom.close FROM Restroom JOIN Places ON Restroom.pid = Places.pid WHERE (Restroom.open <= localtime + interval '8 hours' and Restroom.close >=  localtime + interval '8 hours') or  (localtime + interval '8 hours' >= Restroom.open and Restroom.open >= Restroom.close)"
   cursor = g.conn.execute(query)
   #results = cursor.fetchall()
   restrooms = {'location':[], 'number': [], 'non_binary':[], 'accessible': [], 'no_rooms': [], 'no_units': [], 'open': [], 'close':[]  }
