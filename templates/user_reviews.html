@@ -47,10 +47,9 @@
         {% if reviews['photos'][i] != None%}
 
         <div> <img src="{{url_for('static', filename='images/'+reviews['photos'][i])}}" width="400" height="240" ></div>
+        {% endif %}
 
         <div> <p>{{reviews['time'][i]}}</p></div>
-
-        {% endif %}
 
         {% endfor %}
 

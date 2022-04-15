@@ -34,9 +34,8 @@ def teardown_request(exception):
 
 @app.route('/home')
 def home1():
-  query = "SELECT Places.name, Restroom.rid, Restroom.is_non_binary, Restroom.is_accessible_to_all, Restroom.no_rooms, Restroom.no_units, Restroom.open, Restroom.close FROM Restroom JOIN Places ON Restroom.pid = Places.pid WHERE (Restroom.open <= localtime + interval '8 hours' and Restroom.close >=  localtime + interval '8 hours') or  (localtime + interval '8 hours' >= Restroom.open and Restroom.open >= Restroom.close)"
+  query = "SELECT Places.name, Restroom.rid, Restroom.is_non_binary, Restroom.is_accessible_to_all, Restroom.no_rooms, Restroom.no_units, Restroom.open, Restroom.close FROM Restroom JOIN Places ON Restroom.pid = Places.pid"
   cursor = g.conn.execute(query)
-  #results = cursor.fetchall()
   restrooms = {'location':[], 'number': [], 'non_binary':[], 'accessible': [], 'no_rooms': [], 'no_units': [], 'open': [], 'close':[]  }
   for row in cursor:
     restrooms['location'].append(row['name'])
@@ -146,7 +145,7 @@ def user_tips(uid):
 @app.route('/user_reviews/<uid>')
 def user_reviews(uid):
   
-  cmd = 'SELECT u.name, p.name as place, w.review, w.stars, w.photos, w.time, r.rid FROM Review as w JOIN Restroom as r ON r.rid = w.rid JOIN Places as p ON p.pid = r.pid JOIN U as u ON u.uid = w.uid WHERE w.uid = :u'
+  cmd = 'SELECT u.name, p.name as place, w.review, w.stars, w.photos, w.time, r.rid FROM Review as w JOIN Restroom as r ON r.rid = w.rid JOIN Places as p ON p.pid = r.pid JOIN U as u ON u.uid = w.uid WHERE w.uid = :u ORDER BY w.time'
 
   cursor = g.conn.execute(text(cmd), u = uid)
 
@@ -173,9 +172,6 @@ def user_reviews(uid):
   cursor.close()
 
   return render_template("user_reviews.html", uid = uid, reviews = user_dic, username = username, len_reviews = len(user_dic['rid']) )
-
-
-
 
 @app.route('/')
 def home():
@@ -241,7 +237,6 @@ def search_tips(rid):
 
   return redirect('/restroom/{}/{}'.format(rid,stars))
 
-
 @app.route('/add_tips/<rid>',  methods=['POST'])
 def add_tips(rid):
 
@@ -289,13 +284,6 @@ def add_review(rid):
     
     g.conn.execute(text(cmd), u = uid, r = rid, d = desc, s = stars, t = time);
   return redirect('/restroom/{}/{}'.format(rid,0) )
-
-
-
-
-
-
-
 
 
 @app.route('/restroom/<rid>/<stars>')
@@ -372,9 +360,6 @@ def restroom(rid, stars):
   review = review_dic, len_review = len(review_dic['names_review']), rid = rid)
 
 
-
-
-
 if __name__ == "__main__":
 
   app.secret_key = os.urandom(12)
@@ -387,17 +372,9 @@ if __name__ == "__main__":
   @click.argument('HOST', default='0.0.0.0')
   @click.argument('PORT', default=8111, type=int)
   def run(debug, threaded, host, port):
-    """
-    This function handles command line parameters.
-    Run the server using
-        python server.py
-    Show the help text using
-        python server.py --help
-    """
-
+  
     HOST, PORT = host, port
     print ("running on %s:%d" % (HOST, PORT))
     app.run(host=HOST, port=PORT, debug=debug, threaded=threaded)
-
 
   run()
