@@ -36,7 +36,7 @@
     <div>
         {% for i in range(0, len_visits)%}
 
-        <div> <a href="{{url_for( 'restroom' , rid = visits['rid'][i] )}}"> {{visits['name'][i]}} </a> </div>
+        <div> <a href="{{url_for( 'restroom' , rid = visits['rid'][i], stars = 0 )}}"> {{visits['name'][i]}} </a> </div>
 
         <div><p>Last visited: {{visits['time'][i]}}</p></div>
 

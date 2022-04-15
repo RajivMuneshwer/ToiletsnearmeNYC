@@ -1,0 +1,51 @@
+<html>
+  <style>
+    body{ 
+      font-size: 15pt;
+      font-family: Garamond;
+    }
+    a{
+    text-decoration: none;
+    color: black;
+    }
+  </style>
+
+<body>
+    <h1>ToiletsNearMe</h1>
+    <h2>Toilets nearby are listed as following:</h2>
+    <table>
+        <thead>
+            <tr>
+            <th>Restroom</th>
+            <th>Non-Binary</th>
+            <th>Accessible For All</th>
+            <th>Number of Rooms</th>
+            <th>Number of Units</th>
+            <th>Open</th>
+            <th>Close</th>
+        <thead>
+            </tr>
+        <tr>
+            <td>{% for i in range(0,num_rr)%}
+                <div> <a href="/restroom/{{restrooms['number'][i]}}/0">{{restrooms['location'][i]}}</a><br></div> {% endfor %}</td>
+            <td>{% for i in range(0,num_rr)%}
+                <div> {{restrooms['non_binary'][i]}}<br></div> {% endfor %}</td>
+            <td>{% for i in range(0,num_rr)%}
+                <div> {{restrooms['accessible'][i]}}<br></div> {% endfor %}</td>
+            <td>{% for i in range(0,num_rr)%}
+                <div> {{restrooms['no_rooms'][i]}}<br></div> {% endfor %}</td>
+            <td>{% for i in range(0,num_rr)%}
+                <div> {{restrooms['no_units'][i]}}<br></div> {% endfor %}</td>
+            <td>{% for i in range(0,num_rr)%}
+                <div> {{restrooms['open'][i]}}<br></div> {% endfor %}</td>
+            <td>{% for i in range(0,num_rr)%}
+                <div> {{restrooms['close'][i]}}<br></div> {% endfor %}</td>
+          </tr>
+          
+               
+        </table>
+
+</body>
+</html>
+
+

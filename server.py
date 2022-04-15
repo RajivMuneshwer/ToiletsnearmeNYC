@@ -23,7 +23,7 @@ def before_request():
   except:
     print ("uh oh, problem connecting to database")
     import traceback; traceback.print_exc()
-    g.conn = None
+    raise
 
 @app.teardown_request
 def teardown_request(exception):
@@ -32,14 +32,39 @@ def teardown_request(exception):
   except Exception as e:
     pass
 
+@app.route('/home')
+def home1():
+  query = "SELECT Places.name, Restroom.rid, Restroom.is_non_binary, Restroom.is_accessible_to_all, Restroom.no_rooms, Restroom.no_units, Restroom.open, Restroom.close FROM Restroom JOIN Places ON Restroom.pid = Places.pid"
+  cursor = g.conn.execute(query)
+  #results = cursor.fetchall()
+  restrooms = {'location':[], 'number': [], 'non_binary':[], 'accessible': [], 'no_rooms': [], 'no_units': [], 'open': [], 'close':[]  }
+  for row in cursor:
+    restrooms['location'].append(row['name'])
+    restrooms['number'].append(row['rid'])
+    if row['is_non_binary'] == 1:
+      restrooms['non_binary'].append("Yes")
+    elif row['is_non_binary'] == 0:
+      restrooms['non_binary'].append("No")
+    if row['is_accessible_to_all'] == 1:
+      restrooms['accessible'].append("Yes")
+    elif row['is_accessible_to_all'] == 0:
+      restrooms['accessible'].append("No")
+    restrooms['no_rooms'].append(row['no_rooms'])
+    restrooms['no_units'].append(row['no_units'])
+    restrooms['open'].append(row['open'])
+    restrooms['close'].append(row['close'])
+  cursor.close()
+  return render_template("home.html", restrooms = restrooms, num_rr= len(restrooms['location']))
 
 @app.route('/user/<uid>')
 def user(uid):
-
-  query="SELECT * FROM U WHERE U.uid=:u1"
-
-  cursor = g.conn.execute(text(query), u1 = uid)
-
+  query="SELECT * FROM U WHERE U.uid={}".format(uid)
+  cursor = g.conn.execute(query)
+  username=""
+  is_verified=0
+  non_verified=0
+  startdate=""
+  email=""
   for results in cursor:
 
     username=results['name']
@@ -152,7 +177,6 @@ def user_reviews(uid):
 
 
 
-
 @app.route('/')
 def home():
 
@@ -162,8 +186,7 @@ def home():
 
   else:
 
-    return "Hello Boss!"
-
+    return "Something Wrong!"
 
 
 @app.route('/login', methods = ['POST'])
@@ -183,7 +206,7 @@ def login():
 
   for result in cursor:
 
-    uid.append(result['uid'])  # can also be accessed using result[0]
+    uid.append(result['uid'])  
 
     password.append(result['password'])
 
@@ -198,8 +221,7 @@ def login():
   else:
     flash('wrong password!')
 
-  return redirect('/')
-
+  return redirect('/home')
 
 
 @app.route('/restroom/<rid>/create_tips')
@@ -210,6 +232,14 @@ def create_tips(rid, methods = ['GET','POST']):
 @app.route('/restroom/<rid>/create_review')
 def create_review(rid, methods = ['GET', 'POST']):
   return render_template("review.html", rid =rid)
+
+
+@app.route('/search_tips/<rid>', methods = ['POST'] )
+def search_tips(rid):
+
+  stars = request.form['rating']
+
+  return redirect('/restroom/{}/{}'.format(rid,stars))
 
 
 @app.route('/add_tips/<rid>',  methods=['POST'])
@@ -225,7 +255,7 @@ def add_tips(rid):
 
   g.conn.execute(text(cmd), u = uid, r = rid, l = label, d = desc);
 
-  return redirect('/restroom/'+rid)
+  return redirect('/restroom/{}/{}'.format(rid,0))
 
 @app.route('/add_review/<rid>', methods=  ['POST'])
 def add_review(rid):
@@ -258,7 +288,7 @@ def add_review(rid):
     cmd = 'INSERT INTO  Review VALUES (:r, :u, :d, :s, NULL, :t)';
     
     g.conn.execute(text(cmd), u = uid, r = rid, d = desc, s = stars, t = time);
-  return redirect('/restroom/'+rid )
+  return redirect('/restroom/{}/{}'.format(rid,0) )
 
 
 
@@ -268,8 +298,9 @@ def add_review(rid):
 
 
 
-@app.route('/restroom/<rid>')
-def restroom(rid):
+@app.route('/restroom/<rid>/<stars>')
+def restroom(rid, stars):
+
 
   cmd = 'SELECT U.uid, U.name, T.label, T.description FROM Tips as T JOIN U ON T.uid = U.uid WHERE T.rid = (:r1)';
 
@@ -279,6 +310,8 @@ def restroom(rid):
 
   for result in cursor:
 
+    tips_dic['uid_tips'].append(result['uid'])
+    
     tips_dic['names_tips'].append(result['name'])
 
     if result['label'] != 'None':
@@ -288,13 +321,15 @@ def restroom(rid):
 
     tips_dic['desc_tips'].append(result['description'])
 
-    tips_dic['uid_tips'].append(result['uid'])
-
   cursor.close()
 
-  cmd = 'SELECT U.uid, U.name, R.review, R.stars, R.photos FROM Review as R JOIN U ON R.uid = U.uid WHERE R.rid = (:r2)';
-
-  cursor = g.conn.execute(text(cmd), r2 = rid);
+  if stars == '0':
+    cmd = 'SELECT U.uid, U.name, R.review, R.stars, R.photos FROM Review as R JOIN U ON R.uid = U.uid WHERE R.rid = (:r2)';
+    cursor = g.conn.execute(text(cmd), r2 = rid);
+  
+  else:
+    cmd = 'SELECT U.uid, U.name, R.review, R.stars, R.photos FROM Review as R JOIN U ON R.uid = U.uid WHERE R.rid = (:r2) and R.stars = :s2';
+    cursor = g.conn.execute(text(cmd), r2 = rid, s2 = stars);
 
   review_dic = {'names_review':[],'review_review' : [], 'stars_review' : [], 'photos_review' : [], 'uid_review':[]}
 

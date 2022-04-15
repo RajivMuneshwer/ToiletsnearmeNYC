@@ -34,6 +34,7 @@
   <h1>{{loc['name']}}</h1>
   <div>{{loc['address']}}, {{loc['open']}} to {{loc['close']}}</div>
 
+
   <h2>Tips
   <a href={{url_for('create_tips', rid = rid )}} class="button"> Write Tip</a>
   </h2>
@@ -41,7 +42,7 @@
   <div>
       {% for i in range(0,len_tips)%}
       <div> <a href="{{url_for('user' , uid = tips['uid_tips'][i])}}"> {{tips['names_tips'][i]}} </a> </div>
-      {% if tips['labels_tips'][i] != None%}
+      {% if tips['labels_tips'][i] != None %}
       <div> <strong><font size = 2px font-weight> {{tips['labels_tips'][i]}} </font></strong></div> 
       {% endif%}
       <div>  <p> {{tips['desc_tips'][i]}} </p> </div>
@@ -51,6 +52,21 @@
   <h2>Review
     <a href={{url_for('create_review', rid = rid )}} class="button"> Write Review</a>
   </h2>
+  <br>
+  <form action="{{url_for('search_tips', rid = rid)}}" method = 'POST'>
+    <label for="rating">Rating</label>
+    <select name="rating" id="rating">
+      <option value="0" selected = "selected">All</option>
+      <option value=1>one star</option>
+      <option value=2>two star</option>
+      <option value=3>three star</option>
+      <option value=4>four star</option>
+      <option value=5>five star</option>
+    </select>
+
+    <input type="submit" value="Search">
+
+  </form>
 
   <div>
       {% for i in range(0, len_review)%}
