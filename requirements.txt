@@ -1,4 +1,5 @@
-flask sqlalchemy
-psycopg 2
-jinja 2
-werkzeug.utils
+flask 
+sqlalchemy
+psycopg2
+jinja2
+werkzeug
