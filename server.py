@@ -94,7 +94,7 @@ def user(uid):
 @app.route('/user_visits/<uid>')
 def user_visits(uid):
 
-  cmd = 'SELECT u.name, p.name as place, r.rid, v.time FROM Visit as v JOIN Restroom as r ON v.rid = r.rid JOIN Places as p ON p.pid = r.pid JOIN U as u ON u.uid = v.uid WHERE v.uid  = :u'
+  cmd = 'SELECT u.name, p.name as place, r.rid, v.time FROM Visit as v JOIN Restroom as r ON v.rid = r.rid JOIN Places as p ON p.pid = r.pid JOIN U as u ON u.uid = v.uid WHERE v.uid  = :u ORDER BY v.time'
 
   cursor = g.conn.execute(text(cmd), u = uid)
 
@@ -119,7 +119,7 @@ def user_visits(uid):
 @app.route('/user_tips/<uid>')
 def user_tips(uid):
 
-  cmd = 'SELECT u.name, p.name as place, t.label, t.description, t.rid FROM Tips as t JOIN U as u ON t.uid = u.uid JOIN Restroom as r ON r.rid = t.rid JOIN Places as p ON p.pid = r.pid WHERE t.uid = :u'
+  cmd = 'SELECT  u.name, p.name as place, t.label, t.description, t.rid FROM Tips as t JOIN U as u ON t.uid = u.uid JOIN Restroom as r ON r.rid = t.rid JOIN Places as p ON p.pid = r.pid WHERE t.uid = :u'
 
   cursor = g.conn.execute(text(cmd), u = uid)
 
